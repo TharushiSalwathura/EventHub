@@ -128,5 +128,25 @@
    docker compose up --build
    ```
 
-3. Swagger Documentation URL:
+3. Swagger Documentation URLs:
    * Auth Service Swagger: `http://localhost:8081/swagger-ui.html`
+   * Booking Service Swagger: `http://localhost:8083/swagger-ui.html`
+
+---
+
+## 7. Member 3 API Reference (`/bookings/**`)
+
+### Booking Management APIs
+
+| Method | Endpoint | Description | Request Body / Parameters |
+| :--- | :--- | :--- | :--- |
+| `POST` | `/bookings` | Create a new booking (`PENDING`) | `{ "eventId": 1, "userId": 1, "tickets": 2, "unitPrice": 2500.0 }` |
+| `GET` | `/bookings` | List all bookings | None |
+| `GET` | `/bookings/{id}` | Get booking details by ID | Path variable `id` |
+| `GET` | `/bookings/user/{userId}` | Get all bookings for a specific user | Path variable `userId` |
+| `GET` | `/bookings/event/{eventId}` | Get all bookings for a specific event | Path variable `eventId` |
+| `PUT` | `/bookings/{id}` | Update booking details | `{ "tickets": 3, "status": "CONFIRMED" }` |
+| `POST` | `/bookings/{id}/cancel` | Cancel a booking (`CANCELLED`) | Path variable `id` |
+| `POST` | `/bookings/{id}/confirm` | Confirm a booking (`CONFIRMED`) | Path variable `id` |
+| `DELETE` | `/bookings/{id}` | Delete a booking | Path variable `id` |
+
