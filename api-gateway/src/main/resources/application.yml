@@ -1,0 +1,52 @@
+server:
+  port: 8080
+
+spring:
+  application:
+    name: api-gateway
+  cloud:
+    gateway:
+      globalcors:
+        cors-configurations:
+          '[/**]':
+            allowedOrigins:
+              - "http://localhost:3000"
+              - "http://localhost:5173"
+            allowedMethods:
+              - GET
+              - POST
+              - PUT
+              - DELETE
+              - OPTIONS
+            allowedHeaders: "*"
+            allowCredentials: true
+      routes:
+        - id: auth-service
+          uri: ${AUTH_SERVICE_URL:http://localhost:8081}
+          predicates:
+            - Path=/auth/**, /users/**
+
+        - id: event-service
+          uri: ${EVENT_SERVICE_URL:http://localhost:8082}
+          predicates:
+            - Path=/events/**
+
+        - id: booking-service
+          uri: ${BOOKING_SERVICE_URL:http://localhost:8083}
+          predicates:
+            - Path=/bookings/**
+
+        - id: payment-notification-service
+          uri: ${PAYMENT_SERVICE_URL:http://localhost:8084}
+          predicates:
+            - Path=/payments/**, /notifications/**
+
+jwt:
+  secret: 404E635266556A586E3272357538782F413F4428472B4B6250655368566D5971
+
+api:
+  keys:
+    auth: ${AUTH_SERVICE_KEY:auth-service-secret-key-12345}
+    event: ${EVENT_SERVICE_KEY:event-service-secret-key-12345}
+    booking: ${BOOKING_SERVICE_KEY:booking-service-secret-key-12345}
+    payment: ${PAYMENT_NOTIFICATION_KEY:payment-service-secret-key-12345}
