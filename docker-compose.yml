@@ -92,7 +92,7 @@ services:
       - eventhub-net
 
   # ==========================================
-  # MEMBER 1 MICROSERVICES
+  # MICROSERVICES & FRONTEND
   # ==========================================
 
   auth-service:
@@ -136,6 +136,18 @@ services:
     depends_on:
       - auth-service
       - redis
+    networks:
+      - eventhub-net
+
+  frontend:
+    build:
+      context: ./frontend
+      dockerfile: Dockerfile
+    container_name: eventhub-frontend
+    ports:
+      - "3000:80"
+    depends_on:
+      - api-gateway
     networks:
       - eventhub-net
 
