@@ -114,6 +114,42 @@ services:
     networks:
       - eventhub-net
 
+  event-service:
+    build:
+      context: ./event-service
+      dockerfile: Dockerfile
+    container_name: eventhub-event-service
+    ports:
+      - "8082:8082"
+    environment:
+      SPRING_DATASOURCE_URL: jdbc:postgresql://event-db:5432/eventhub_event
+      SPRING_DATASOURCE_USERNAME: ${POSTGRES_USER}
+      SPRING_DATASOURCE_PASSWORD: ${POSTGRES_PASSWORD}
+      EVENT_SERVICE_KEY: ${EVENT_SERVICE_KEY}
+    depends_on:
+      event-db:
+        condition: service_healthy
+    networks:
+      - eventhub-net
+
+  booking-service:
+    build:
+      context: ./booking-service
+      dockerfile: Dockerfile
+    container_name: eventhub-booking-service
+    ports:
+      - "8083:8083"
+    environment:
+      SPRING_DATASOURCE_URL: jdbc:postgresql://booking-db:5432/eventhub_booking
+      SPRING_DATASOURCE_USERNAME: ${POSTGRES_USER}
+      SPRING_DATASOURCE_PASSWORD: ${POSTGRES_PASSWORD}
+      BOOKING_SERVICE_KEY: ${BOOKING_SERVICE_KEY}
+    depends_on:
+      booking-db:
+        condition: service_healthy
+    networks:
+      - eventhub-net
+
   api-gateway:
     build:
       context: ./api-gateway
@@ -135,6 +171,8 @@ services:
       SPRING_DATA_REDIS_PORT: 6379
     depends_on:
       - auth-service
+      - event-service
+      - booking-service
       - redis
     networks:
       - eventhub-net
