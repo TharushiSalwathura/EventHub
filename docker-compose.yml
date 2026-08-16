@@ -150,6 +150,26 @@ services:
     networks:
       - eventhub-net
 
+  payment-notification-service:
+    build:
+      context: ./payment-notification-service
+      dockerfile: Dockerfile
+    container_name: eventhub-payment-notification-service
+    ports:
+      - "8084:8084"
+    environment:
+      SPRING_DATASOURCE_URL: jdbc:postgresql://payment-db:5432/eventhub_payment
+      SPRING_DATASOURCE_USERNAME: ${POSTGRES_USER}
+      SPRING_DATASOURCE_PASSWORD: ${POSTGRES_PASSWORD}
+      PAYMENT_NOTIFICATION_KEY: ${PAYMENT_NOTIFICATION_KEY}
+      BOOKING_SERVICE_URL: http://booking-service:8083
+      BOOKING_SERVICE_KEY: ${BOOKING_SERVICE_KEY}
+    depends_on:
+      payment-db:
+        condition: service_healthy
+    networks:
+      - eventhub-net
+
   api-gateway:
     build:
       context: ./api-gateway
@@ -173,6 +193,7 @@ services:
       - auth-service
       - event-service
       - booking-service
+      - payment-notification-service
       - redis
     networks:
       - eventhub-net

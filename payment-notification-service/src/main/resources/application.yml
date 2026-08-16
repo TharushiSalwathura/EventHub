@@ -1,0 +1,35 @@
+server:
+  port: 8084
+
+spring:
+  application:
+    name: payment-notification-service
+  datasource:
+    url: ${SPRING_DATASOURCE_URL:jdbc:postgresql://localhost:5435/eventhub_payment}
+    username: ${POSTGRES_USER:postgres}
+    password: ${POSTGRES_PASSWORD:postgrespassword}
+  jpa:
+    hibernate:
+      ddl-auto: update
+    show-sql: true
+    properties:
+      hibernate:
+        format_sql: true
+
+# Springdoc OpenAPI & Swagger UI Configuration
+springdoc:
+  api-docs:
+    path: /v3/api-docs
+  swagger-ui:
+    path: /swagger-ui.html
+    operationsSorter: method
+
+# Security API Key for Internal Microservice Communication
+api:
+  key: ${PAYMENT_NOTIFICATION_KEY:payment-service-secret-key-12345}
+
+# External Service Configurations for Inter-Service Calls
+services:
+  booking:
+    url: ${BOOKING_SERVICE_URL:http://localhost:8083}
+    key: ${BOOKING_SERVICE_KEY:booking-service-secret-key-12345}
