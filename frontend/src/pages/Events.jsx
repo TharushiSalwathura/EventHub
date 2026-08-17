@@ -1,8 +1,8 @@
 import React, { useState, useEffect } from 'react';
 import { api } from '../services/api';
-import { Calendar, MapPin, Ticket, CheckCircle2, DollarSign, X, CreditCard, Lock, ShieldCheck } from 'lucide-react';
+import { Calendar, MapPin, Ticket, CheckCircle2, DollarSign, X, CreditCard, Lock, ShieldCheck, Sparkles } from 'lucide-react';
 
-export default function Events({ user }) {
+export default function Events({ user, onAddNotification }) {
   const [events, setEvents] = useState([]);
   const [loading, setLoading] = useState(true);
   const [selectedEvent, setSelectedEvent] = useState(null);
@@ -17,6 +17,7 @@ export default function Events({ user }) {
   const [expiryDate, setExpiryDate] = useState('');
   const [cvv, setCvv] = useState('');
   const [processing, setProcessing] = useState(false);
+  const [toastAlert, setToastAlert] = useState(null);
 
   useEffect(() => {
     loadEvents();
@@ -74,10 +75,32 @@ export default function Events({ user }) {
       const payment = await api.processPayment({
         bookingId: bookingSuccess.id,
         userId: user ? user.userId : 1,
-        amount: bookingSuccess.totalAmount,
+        amount: bookingSuccess.totalAmount || (selectedEvent.price * ticketCount),
         paymentMethod: paymentMethod
       });
+
       setPaymentSuccess(payment);
+
+      // Trigger Notification Banner & Bar Alert
+      const notificationMsg = {
+        title: '🎉 Payment Successful!',
+        message: `${ticketCount} ticket(s) confirmed for "${selectedEvent.title}". Total Paid: Rs. ${(bookingSuccess.totalAmount || (selectedEvent.price * ticketCount)).toLocaleString()}`,
+        eventTitle: selectedEvent.title,
+        tickets: ticketCount,
+        amount: bookingSuccess.totalAmount || (selectedEvent.price * ticketCount),
+        txnId: payment.transactionReference || payment.transactionId || 'TXN-84920482',
+        timestamp: new Date().toLocaleString()
+      };
+
+      if (onAddNotification) {
+        onAddNotification(notificationMsg);
+      }
+
+      setToastAlert(notificationMsg);
+      setTimeout(() => setToastAlert(null), 8000);
+
+      // Refresh remaining seat count
+      loadEvents();
     } catch (err) {
       alert('Payment failed: ' + err.message);
     } finally {
@@ -87,21 +110,35 @@ export default function Events({ user }) {
 
   return (
     <div style={{ maxWidth: '1200px', margin: '40px auto', padding: '0 20px', width: '100%' }}>
+      
+      {/* Toast Alert Banner */}
+      {toastAlert && (
+        <div style={{ position: 'fixed', top: '80px', right: '20px', background: 'linear-gradient(135deg, #10b981, #059669)', color: 'white', padding: '16px 24px', borderRadius: '14px', boxShadow: '0 10px 30px rgba(16, 185, 129, 0.4)', zIndex: 1000, display: 'flex', alignItems: 'center', gap: '14px', maxWidth: '420px' }}>
+          <Sparkles size={24} />
+          <div>
+            <div style={{ fontWeight: 800, fontSize: '0.95rem' }}>{toastAlert.title}</div>
+            <div style={{ fontSize: '0.85rem', opacity: 0.9 }}>{toastAlert.message}</div>
+          </div>
+          <button onClick={() => setToastAlert(null)} style={{ background: 'transparent', border: 'none', color: 'white', cursor: 'pointer', marginLeft: 'auto' }}><X size={18} /></button>
+        </div>
+      )}
+
+      {/* Page Header */}
       <div style={{ marginBottom: '32px' }}>
-        <h1 style={{ fontSize: '2.2rem', fontWeight: 800, marginBottom: '8px' }}>Upcoming Events Catalog</h1>
-        <p style={{ color: 'var(--text-muted)' }}>Browse available events routed through API Gateway (`/events/**`)</p>
+        <h1 style={{ fontSize: '2.2rem', fontWeight: 800, marginBottom: '8px' }}>Explore Upcoming Events</h1>
+        <p style={{ color: 'var(--text-muted)' }}>Browse music festivals, tech summits, workshops, and reserve your tickets instantly.</p>
       </div>
 
       {loading ? (
-        <div style={{ textAlign: 'center', padding: '60px', color: 'var(--text-muted)' }}>Loading events...</div>
+        <div style={{ textAlign: 'center', padding: '60px', color: 'var(--text-muted)' }}>Loading event catalog...</div>
       ) : (
         <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fill, minmax(340px, 1fr))', gap: '28px' }}>
           {events.map((evt) => (
             <div key={evt.id} className="glass-panel glass-panel-hover" style={{ padding: '28px', display: 'flex', flexDirection: 'column', justifyContent: 'space-between' }}>
               <div>
                 <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start', marginBottom: '14px' }}>
-                  <span className="badge badge-info">{evt.location}</span>
-                  <span style={{ fontSize: '1.2rem', fontWeight: 800, color: 'var(--success-color)' }}>Rs. {evt.price.toLocaleString()}</span>
+                  <span className="badge badge-info">{evt.location ? evt.location.split(',')[0] : 'Venue'}</span>
+                  <span style={{ fontSize: '1.2rem', fontWeight: 800, color: 'var(--success-color)' }}>Rs. {evt.price ? evt.price.toLocaleString() : '0'}</span>
                 </div>
                 <h3 style={{ fontSize: '1.3rem', fontWeight: 700, marginBottom: '10px' }}>{evt.title}</h3>
                 
@@ -136,7 +173,7 @@ export default function Events({ user }) {
                 <div style={{ background: 'rgba(255,255,255,0.03)', padding: '16px', borderRadius: 'var(--radius-sm)', marginBottom: '20px' }}>
                   <h4 style={{ fontWeight: 700, marginBottom: '4px' }}>{selectedEvent.title}</h4>
                   <p style={{ color: 'var(--text-muted)', fontSize: '0.85rem' }}>{selectedEvent.location}</p>
-                  <p style={{ fontSize: '1.1rem', fontWeight: 700, color: 'var(--success-color)', marginTop: '8px' }}>Rs. {selectedEvent.price.toLocaleString()} / ticket</p>
+                  <p style={{ fontSize: '1.1rem', fontWeight: 700, color: 'var(--success-color)', marginTop: '8px' }}>Rs. {selectedEvent.price ? selectedEvent.price.toLocaleString() : '0'} / ticket</p>
                 </div>
 
                 <div className="form-group">
@@ -164,8 +201,8 @@ export default function Events({ user }) {
               <form onSubmit={handlePayNow}>
                 <div style={{ background: 'rgba(59, 130, 246, 0.12)', border: '1px solid rgba(59, 130, 246, 0.3)', padding: '14px', borderRadius: 'var(--radius-sm)', marginBottom: '18px' }}>
                   <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
-                    <span style={{ fontSize: '0.85rem', color: 'var(--text-muted)' }}>Booking Reference: <b>#{bookingSuccess.id}</b></span>
-                    <span style={{ fontSize: '1.1rem', fontWeight: 800, color: 'var(--success-color)' }}>Rs. {bookingSuccess.totalAmount ? bookingSuccess.totalAmount.toLocaleString() : (selectedEvent.price * ticketCount).toLocaleString()}</span>
+                    <span style={{ fontSize: '0.85rem', color: 'var(--text-muted)' }}>Booking Ref: <b>#{bookingSuccess.id}</b></span>
+                    <span style={{ fontSize: '1.1rem', fontWeight: 800, color: 'var(--success-color)' }}>Rs. {(bookingSuccess.totalAmount || (selectedEvent.price * ticketCount)).toLocaleString()}</span>
                   </div>
                 </div>
 
@@ -267,7 +304,7 @@ export default function Events({ user }) {
                 </div>
 
                 <div style={{ display: 'flex', alignItems: 'center', gap: '6px', fontSize: '0.75rem', color: 'var(--text-dim)', marginBottom: '16px' }}>
-                  <Lock size={14} color="var(--success-color)" /> Encrypted 256-Bit SSL Payment Gateway (Member 4 Service :8084)
+                  <Lock size={14} color="var(--success-color)" /> Encrypted 256-Bit SSL Payment Gateway
                 </div>
 
                 <button type="submit" disabled={processing} className="btn btn-primary" style={{ width: '100%', padding: '12px', background: 'linear-gradient(135deg, #10b981, #059669)' }}>
@@ -278,11 +315,11 @@ export default function Events({ user }) {
               <div style={{ textAlign: 'center' }}>
                 <div style={{ background: 'rgba(16, 185, 129, 0.15)', border: '1px solid rgba(16, 185, 129, 0.3)', color: 'var(--success-color)', padding: '24px', borderRadius: 'var(--radius-sm)', marginBottom: '20px' }}>
                   <ShieldCheck size={48} style={{ marginBottom: '10px' }} />
-                  <h3 style={{ fontSize: '1.3rem', fontWeight: 700 }}>Payment SUCCESSFUL!</h3>
-                  <p style={{ fontSize: '0.95rem', marginTop: '8px', color: 'white' }}>Transaction Reference: <b style={{ fontFamily: 'monospace', background: 'rgba(255,255,255,0.1)', padding: '2px 8px', borderRadius: '4px' }}>{paymentSuccess.transactionReference || paymentSuccess.transactionId || 'TXN-84920482'}</b></p>
-                  <p style={{ fontSize: '0.85rem', color: 'var(--text-muted)', marginTop: '8px' }}>Booking Status updated to <b style={{ color: 'var(--success-color)' }}>CONFIRMED</b>. Real-time notification dispatched!</p>
+                  <h3 style={{ fontSize: '1.3rem', fontWeight: 700 }}>Payment Successful!</h3>
+                  <p style={{ fontSize: '0.95rem', marginTop: '8px', color: 'white' }}>Transaction Ref: <b style={{ fontFamily: 'monospace', background: 'rgba(255,255,255,0.1)', padding: '2px 8px', borderRadius: '4px' }}>{paymentSuccess.transactionReference || paymentSuccess.transactionId || 'TXN-84920482'}</b></p>
+                  <p style={{ fontSize: '0.85rem', color: 'var(--text-muted)', marginTop: '8px' }}>Your booking status is <b>CONFIRMED</b>. View alerts in your Notifications bar!</p>
                 </div>
-                <button onClick={() => setSelectedEvent(null)} className="btn btn-secondary" style={{ width: '100%', padding: '10px' }}>Done</button>
+                <button onClick={() => setSelectedEvent(null)} className="btn btn-secondary" style={{ width: '100%', padding: '10px' }}>Close</button>
               </div>
             )}
           </div>
