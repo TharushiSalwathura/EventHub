@@ -4,19 +4,9 @@ server:
 spring:
   application:
     name: event-service
-  datasource:
-    url: jdbc:postgresql://localhost:5433/eventhub_event
-    username: postgres
-    password: postgrespassword
-    driver-class-name: org.postgresql.Driver
-  jpa:
-    hibernate:
-      ddl-auto: update
-    show-sql: true
-    properties:
-      hibernate:
-        format_sql: true
-        dialect: org.hibernate.dialect.PostgreSQLDialect
+  data:
+    mongodb:
+      uri: ${SPRING_DATA_MONGODB_URI:mongodb://localhost:27018/eventhub_event}
 
 api:
   key: ${EVENT_SERVICE_KEY:event-service-secret-key-12345}
@@ -31,4 +21,3 @@ springdoc:
 logging:
   level:
     com.eventhub.event: DEBUG
-    org.hibernate.SQL: DEBUG

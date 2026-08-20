@@ -4,17 +4,9 @@ server:
 spring:
   application:
     name: auth-service
-  datasource:
-    url: jdbc:postgresql://localhost:5432/eventhub_auth
-    username: postgres
-    password: postgrespassword
-  jpa:
-    hibernate:
-      ddl-auto: update
-    show-sql: true
-    properties:
-      hibernate:
-        format_sql: true
+  data:
+    mongodb:
+      uri: ${SPRING_DATA_MONGODB_URI:mongodb://localhost:27017/eventhub_auth}
 
 jwt:
   secret: 404E635266556A586E3272357538782F413F4428472B4B6250655368566D5971
@@ -22,3 +14,10 @@ jwt:
 
 api:
   key: ${AUTH_SERVICE_KEY:auth-service-secret-key-12345}
+
+springdoc:
+  api-docs:
+    path: /v3/api-docs
+  swagger-ui:
+    path: /swagger-ui.html
+    operationsSorter: method

@@ -11,15 +11,14 @@ import com.eventhub.booking.repository.BookingRepository;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Service;
-import org.springframework.transaction.annotation.Transactional;
 
 import java.util.List;
+import java.util.Random;
 import java.util.stream.Collectors;
 
 @Service
 @RequiredArgsConstructor
 @Slf4j
-@Transactional
 public class BookingServiceImpl implements BookingService {
 
     private final BookingRepository bookingRepository;
@@ -42,7 +41,10 @@ public class BookingServiceImpl implements BookingService {
             }
         }
 
+        Long nextId = Math.abs(new Random().nextLong() % 900000L) + 100000L;
+
         Booking booking = Booking.builder()
+                .id(nextId)
                 .eventId(request.getEventId())
                 .eventTitle(request.getEventTitle())
                 .userId(request.getUserId())
@@ -58,7 +60,6 @@ public class BookingServiceImpl implements BookingService {
     }
 
     @Override
-    @Transactional(readOnly = true)
     public List<BookingResponse> getAllBookings() {
         log.info("Fetching all bookings");
         return bookingRepository.findAll().stream()
@@ -67,7 +68,6 @@ public class BookingServiceImpl implements BookingService {
     }
 
     @Override
-    @Transactional(readOnly = true)
     public BookingResponse getBookingById(Long id) {
         log.info("Fetching booking by id: {}", id);
         Booking booking = bookingRepository.findById(id)
@@ -76,7 +76,6 @@ public class BookingServiceImpl implements BookingService {
     }
 
     @Override
-    @Transactional(readOnly = true)
     public List<BookingResponse> getBookingsByUserId(Long userId) {
         log.info("Fetching bookings for userId: {}", userId);
         return bookingRepository.findByUserIdOrderByCreatedAtDesc(userId).stream()
@@ -85,7 +84,6 @@ public class BookingServiceImpl implements BookingService {
     }
 
     @Override
-    @Transactional(readOnly = true)
     public List<BookingResponse> getBookingsByEventId(Long eventId) {
         log.info("Fetching bookings for eventId: {}", eventId);
         return bookingRepository.findByEventId(eventId).stream()

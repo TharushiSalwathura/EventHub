@@ -1,57 +1,41 @@
 services:
   # ==========================================
-  # DATABASES & INFRASTRUCTURE
+  # MONGO DATABASES & INFRASTRUCTURE
   # ==========================================
 
-  # Member 1 Auth Database
+  # Member 1 Auth Database (MongoDB)
   auth-db:
-    image: postgres:16-alpine
+    image: mongo:7.0
     container_name: eventhub-auth-db
-    environment:
-      POSTGRES_DB: eventhub_auth
-      POSTGRES_USER: ${POSTGRES_USER}
-      POSTGRES_PASSWORD: ${POSTGRES_PASSWORD}
     ports:
-      - "5432:5432"
+      - "27017:27017"
     networks:
       - eventhub-net
 
-  # Member 2 Event Database
+  # Member 2 Event Database (MongoDB)
   event-db:
-    image: postgres:16-alpine
+    image: mongo:7.0
     container_name: eventhub-event-db
-    environment:
-      POSTGRES_DB: eventhub_event
-      POSTGRES_USER: ${POSTGRES_USER}
-      POSTGRES_PASSWORD: ${POSTGRES_PASSWORD}
     ports:
-      - "5433:5432"
+      - "27018:27017"
     networks:
       - eventhub-net
 
-  # Member 3 Booking Database
+  # Member 3 Booking Database (MongoDB)
   booking-db:
-    image: postgres:16-alpine
+    image: mongo:7.0
     container_name: eventhub-booking-db
-    environment:
-      POSTGRES_DB: eventhub_booking
-      POSTGRES_USER: ${POSTGRES_USER}
-      POSTGRES_PASSWORD: ${POSTGRES_PASSWORD}
     ports:
-      - "5434:5432"
+      - "27019:27017"
     networks:
       - eventhub-net
 
-  # Member 4 Payment Database
+  # Member 4 Payment Database (MongoDB)
   payment-db:
-    image: postgres:16-alpine
+    image: mongo:7.0
     container_name: eventhub-payment-db
-    environment:
-      POSTGRES_DB: eventhub_payment
-      POSTGRES_USER: ${POSTGRES_USER}
-      POSTGRES_PASSWORD: ${POSTGRES_PASSWORD}
     ports:
-      - "5435:5432"
+      - "27020:27017"
     networks:
       - eventhub-net
 
@@ -76,9 +60,7 @@ services:
     ports:
       - "8081:8081"
     environment:
-      SPRING_DATASOURCE_URL: jdbc:postgresql://auth-db:5432/eventhub_auth
-      SPRING_DATASOURCE_USERNAME: ${POSTGRES_USER}
-      SPRING_DATASOURCE_PASSWORD: ${POSTGRES_PASSWORD}
+      SPRING_DATA_MONGODB_URI: mongodb://auth-db:27017/eventhub_auth
       AUTH_SERVICE_KEY: ${AUTH_SERVICE_KEY}
       JWT_SECRET: ${JWT_SECRET}
     depends_on:
@@ -94,9 +76,7 @@ services:
     ports:
       - "8082:8082"
     environment:
-      SPRING_DATASOURCE_URL: jdbc:postgresql://event-db:5432/eventhub_event
-      SPRING_DATASOURCE_USERNAME: ${POSTGRES_USER}
-      SPRING_DATASOURCE_PASSWORD: ${POSTGRES_PASSWORD}
+      SPRING_DATA_MONGODB_URI: mongodb://event-db:27017/eventhub_event
       EVENT_SERVICE_KEY: ${EVENT_SERVICE_KEY}
     depends_on:
       - event-db
@@ -111,9 +91,7 @@ services:
     ports:
       - "8083:8083"
     environment:
-      SPRING_DATASOURCE_URL: jdbc:postgresql://booking-db:5432/eventhub_booking
-      SPRING_DATASOURCE_USERNAME: ${POSTGRES_USER}
-      SPRING_DATASOURCE_PASSWORD: ${POSTGRES_PASSWORD}
+      SPRING_DATA_MONGODB_URI: mongodb://booking-db:27017/eventhub_booking
       BOOKING_SERVICE_KEY: ${BOOKING_SERVICE_KEY}
     depends_on:
       - booking-db
@@ -128,9 +106,7 @@ services:
     ports:
       - "8084:8084"
     environment:
-      SPRING_DATASOURCE_URL: jdbc:postgresql://payment-db:5432/eventhub_payment
-      SPRING_DATASOURCE_USERNAME: ${POSTGRES_USER}
-      SPRING_DATASOURCE_PASSWORD: ${POSTGRES_PASSWORD}
+      SPRING_DATA_MONGODB_URI: mongodb://payment-db:27017/eventhub_payment
       PAYMENT_NOTIFICATION_KEY: ${PAYMENT_NOTIFICATION_KEY}
       BOOKING_SERVICE_URL: http://booking-service:8083
       BOOKING_SERVICE_KEY: ${BOOKING_SERVICE_KEY}

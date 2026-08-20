@@ -19,12 +19,12 @@ import org.springframework.http.HttpHeaders;
 import org.springframework.http.HttpMethod;
 import org.springframework.http.MediaType;
 import org.springframework.stereotype.Service;
-import org.springframework.transaction.annotation.Transactional;
 import org.springframework.web.client.RestTemplate;
 
 import java.time.LocalDateTime;
 import java.time.format.DateTimeFormatter;
 import java.util.List;
+import java.util.Random;
 import java.util.UUID;
 import java.util.stream.Collectors;
 
@@ -46,7 +46,6 @@ public class PaymentServiceImpl implements PaymentService {
     private static final DateTimeFormatter FORMATTER = DateTimeFormatter.ofPattern("yyyy-MM-dd HH:mm:ss");
 
     @Override
-    @Transactional
     public PaymentResponse processPayment(ProcessPaymentRequest request) {
         log.info("Processing payment of Rs. {} for Booking ID: {} (Method: {})",
                 request.getAmount(), request.getBookingId(), request.getPaymentMethod());
@@ -55,8 +54,10 @@ public class PaymentServiceImpl implements PaymentService {
         Long userId = request.getUserId() != null ? request.getUserId() : 1L;
 
         String txnRef = "TXN-" + UUID.randomUUID().toString().substring(0, 8).toUpperCase();
+        Long nextId = Math.abs(new Random().nextLong() % 900000L) + 100000L;
 
         Payment payment = Payment.builder()
+                .id(nextId)
                 .bookingId(request.getBookingId())
                 .userId(userId)
                 .amount(request.getAmount())
@@ -69,7 +70,6 @@ public class PaymentServiceImpl implements PaymentService {
         Payment savedPayment = paymentRepository.save(payment);
         log.info("Payment processed successfully with ID: {} and Ref: {}", savedPayment.getId(), txnRef);
 
-        // 1. Dispatch notification alert to user
         try {
             notificationService.sendNotification(SendNotificationRequest.builder()
                     .userId(userId)
@@ -81,7 +81,6 @@ public class PaymentServiceImpl implements PaymentService {
             log.warn("Failed to dispatch payment confirmation notification: {}", e.getMessage());
         }
 
-        // 2. Automatically confirm booking in Booking Service if available
         try {
             confirmBookingInBookingService(request.getBookingId());
         } catch (Exception e) {
@@ -92,7 +91,6 @@ public class PaymentServiceImpl implements PaymentService {
     }
 
     @Override
-    @Transactional(readOnly = true)
     public List<PaymentResponse> getAllPayments() {
         return paymentRepository.findAllByOrderByCreatedAtDesc()
                 .stream()
@@ -101,7 +99,6 @@ public class PaymentServiceImpl implements PaymentService {
     }
 
     @Override
-    @Transactional(readOnly = true)
     public PaymentResponse getPaymentById(Long id) {
         Payment payment = paymentRepository.findById(id)
                 .orElseThrow(() -> new ResourceNotFoundException("Payment receipt not found for ID: " + id));
@@ -109,7 +106,6 @@ public class PaymentServiceImpl implements PaymentService {
     }
 
     @Override
-    @Transactional(readOnly = true)
     public PaymentResponse getPaymentByBookingId(Long bookingId) {
         Payment payment = paymentRepository.findByBookingId(bookingId)
                 .orElseThrow(() -> new ResourceNotFoundException("Payment receipt not found for Booking ID: " + bookingId));

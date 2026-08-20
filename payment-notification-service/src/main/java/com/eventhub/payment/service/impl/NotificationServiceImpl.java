@@ -10,11 +10,11 @@ import com.eventhub.payment.service.NotificationService;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Service;
-import org.springframework.transaction.annotation.Transactional;
 
 import java.time.LocalDateTime;
 import java.time.format.DateTimeFormatter;
 import java.util.List;
+import java.util.Random;
 import java.util.stream.Collectors;
 
 @Service
@@ -26,13 +26,14 @@ public class NotificationServiceImpl implements NotificationService {
     private static final DateTimeFormatter FORMATTER = DateTimeFormatter.ofPattern("yyyy-MM-dd HH:mm:ss");
 
     @Override
-    @Transactional
     public NotificationResponse sendNotification(SendNotificationRequest request) {
         log.info("Dispatching notification via [{}] to user ID: {}", request.getType(), request.getUserId());
 
         NotificationType type = request.getType() != null ? request.getType() : NotificationType.EMAIL;
+        Long nextId = Math.abs(new Random().nextLong() % 900000L) + 100000L;
 
         Notification notification = Notification.builder()
+                .id(nextId)
                 .userId(request.getUserId())
                 .message(request.getMessage())
                 .type(type)
@@ -47,7 +48,6 @@ public class NotificationServiceImpl implements NotificationService {
     }
 
     @Override
-    @Transactional(readOnly = true)
     public List<NotificationResponse> getAllNotifications() {
         return notificationRepository.findAllByOrderByCreatedAtDesc()
                 .stream()
@@ -56,7 +56,6 @@ public class NotificationServiceImpl implements NotificationService {
     }
 
     @Override
-    @Transactional(readOnly = true)
     public List<NotificationResponse> getNotificationsByUserId(Long userId) {
         return notificationRepository.findByUserIdOrderByCreatedAtDesc(userId)
                 .stream()
