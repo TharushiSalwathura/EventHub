@@ -1,12 +1,13 @@
 import React, { useState } from 'react';
 import { Link, useNavigate } from 'react-router-dom';
-import { Calendar, User, LogOut, Bell, Ticket, Sparkles, CheckCircle2, X } from 'lucide-react';
+import { Calendar, User, LogOut, Bell, Ticket, Sparkles, Shield, X } from 'lucide-react';
 
 export default function Navbar({ user, onLogout, notifications = [] }) {
   const navigate = useNavigate();
   const [showNotificationDropdown, setShowNotificationDropdown] = useState(false);
 
   const unreadCount = notifications.length;
+  const isAdmin = user && user.role === 'ADMIN';
 
   return (
     <nav className="glass-panel" style={{ borderRadius: 0, borderTop: 0, borderLeft: 0, borderRight: 0, padding: '16px 32px', position: 'sticky', top: 0, zIndex: 100 }}>
@@ -30,9 +31,16 @@ export default function Navbar({ user, onLogout, notifications = [] }) {
 
           {user ? (
             <>
-              <Link to="/my-bookings" style={{ display: 'flex', alignItems: 'center', gap: '6px', fontSize: '0.95rem', fontWeight: 600, color: 'var(--text-main)', textDecoration: 'none' }}>
-                <Ticket size={18} color="var(--secondary-accent)" /> My Bookings
-              </Link>
+              {/* Admin Portal Shortcut in Navbar */}
+              {isAdmin ? (
+                <Link to="/dashboard" style={{ display: 'flex', alignItems: 'center', gap: '6px', fontSize: '0.95rem', fontWeight: 700, color: '#f59e0b', background: 'rgba(245, 158, 11, 0.15)', padding: '6px 14px', borderRadius: '8px', border: '1px solid rgba(245, 158, 11, 0.3)', textDecoration: 'none' }}>
+                  <Shield size={18} color="#f59e0b" /> Admin Manager Portal
+                </Link>
+              ) : (
+                <Link to="/my-bookings" style={{ display: 'flex', alignItems: 'center', gap: '6px', fontSize: '0.95rem', fontWeight: 600, color: 'var(--text-main)', textDecoration: 'none' }}>
+                  <Ticket size={18} color="var(--secondary-accent)" /> My Bookings
+                </Link>
+              )}
 
               {/* Notification Bell Dropdown */}
               <div style={{ position: 'relative' }}>
@@ -73,7 +81,7 @@ export default function Navbar({ user, onLogout, notifications = [] }) {
                       </div>
                     )}
 
-                    <div style={{ marginTop: '12px', textCenter: 'center', borderTop: '1px solid rgba(255,255,255,0.08)', paddingTop: '8px' }}>
+                    <div style={{ marginTop: '12px', textAlign: 'center', borderTop: '1px solid rgba(255,255,255,0.08)', paddingTop: '8px' }}>
                       <Link to="/notifications" onClick={() => setShowNotificationDropdown(false)} style={{ fontSize: '0.8rem', color: 'var(--accent-primary)', fontWeight: 600, textDecoration: 'none', display: 'block', textAlign: 'center' }}>
                         View All Notifications →
                       </Link>
@@ -83,13 +91,15 @@ export default function Navbar({ user, onLogout, notifications = [] }) {
               </div>
 
               <Link to="/dashboard" style={{ display: 'flex', alignItems: 'center', gap: '6px', fontSize: '0.95rem', fontWeight: 600, color: 'var(--text-main)', textDecoration: 'none' }}>
-                <User size={18} color="var(--accent-primary)" /> Profile
+                <User size={18} color="var(--accent-primary)" /> Dashboard
               </Link>
 
               <div style={{ display: 'flex', alignItems: 'center', gap: '12px', paddingLeft: '12px', borderLeft: '1px solid var(--border-color)' }}>
                 <div style={{ textAlign: 'right' }}>
                   <div style={{ fontSize: '0.9rem', fontWeight: 700 }}>{user.name}</div>
-                  <span className="badge badge-success" style={{ fontSize: '0.65rem' }}>{user.role}</span>
+                  <span className={isAdmin ? "badge badge-warning" : "badge badge-success"} style={{ fontSize: '0.65rem' }}>
+                    {user.role}
+                  </span>
                 </div>
                 <button onClick={() => { onLogout(); navigate('/login'); }} className="btn btn-secondary" style={{ padding: '8px 12px' }}>
                   <LogOut size={16} />
