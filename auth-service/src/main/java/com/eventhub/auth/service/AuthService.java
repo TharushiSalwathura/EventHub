@@ -29,13 +29,14 @@ public class AuthService {
         }
 
         Long nextId = Math.abs(new Random().nextLong() % 900000L) + 100000L;
+        UserRole assignedRole = request.getRole() != null ? request.getRole() : UserRole.USER;
 
         User user = User.builder()
                 .id(nextId)
                 .name(request.getName())
                 .email(request.getEmail())
                 .password(passwordEncoder.encode(request.getPassword()))
-                .role(UserRole.USER)
+                .role(assignedRole)
                 .build();
 
         User savedUser = userRepository.save(user);

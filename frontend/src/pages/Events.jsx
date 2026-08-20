@@ -1,6 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import { api } from '../services/api';
-import { Calendar, MapPin, Ticket, CheckCircle2, DollarSign, X, CreditCard, Lock, ShieldCheck, Sparkles } from 'lucide-react';
+import { Calendar, MapPin, Ticket, CheckCircle2, DollarSign, X, CreditCard, Lock, ShieldCheck, Sparkles, PlusCircle, Shield } from 'lucide-react';
 
 export default function Events({ user, onAddNotification }) {
   const [events, setEvents] = useState([]);
@@ -9,6 +9,17 @@ export default function Events({ user, onAddNotification }) {
   const [ticketCount, setTicketCount] = useState(1);
   const [bookingSuccess, setBookingSuccess] = useState(null);
   const [paymentSuccess, setPaymentSuccess] = useState(null);
+
+  // Admin Event Creation Modal State
+  const [showCreateModal, setShowCreateModal] = useState(false);
+  const [newEvent, setNewEvent] = useState({
+    title: '',
+    description: '',
+    location: '',
+    eventDate: '2026-11-15T09:00:00',
+    capacity: 200,
+    price: 3500
+  });
 
   // Payment Form Fields
   const [paymentMethod, setPaymentMethod] = useState('CREDIT_CARD');
@@ -35,6 +46,24 @@ export default function Events({ user, onAddNotification }) {
     }
   };
 
+  const handleCreateEventSubmit = async (e) => {
+    e.preventDefault();
+    try {
+      await api.createEvent({
+        ...newEvent,
+        capacity: parseInt(newEvent.capacity),
+        price: parseFloat(newEvent.price)
+      });
+
+      alert(`Event "${newEvent.title}" created successfully in MongoDB!`);
+      setShowCreateModal(false);
+      setNewEvent({ title: '', description: '', location: '', eventDate: '2026-11-15T09:00:00', capacity: 200, price: 3500 });
+      loadEvents();
+    } catch (err) {
+      alert('Failed to create event: ' + err.message);
+    }
+  };
+
   const handleBookClick = (event) => {
     setSelectedEvent(event);
     setTicketCount(1);
@@ -51,7 +80,7 @@ export default function Events({ user, onAddNotification }) {
     try {
       const booking = await api.createBooking({
         eventId: selectedEvent.id,
-        userId: user ? user.userId : 1,
+        userId: user ? user.userId : 100001,
         tickets: ticketCount,
         price: selectedEvent.price
       });
@@ -74,14 +103,13 @@ export default function Events({ user, onAddNotification }) {
     try {
       const payment = await api.processPayment({
         bookingId: bookingSuccess.id,
-        userId: user ? user.userId : 1,
+        userId: user ? user.userId : 100001,
         amount: bookingSuccess.totalAmount || (selectedEvent.price * ticketCount),
         paymentMethod: paymentMethod
       });
 
       setPaymentSuccess(payment);
 
-      // Trigger Notification Banner & Bar Alert
       const notificationMsg = {
         title: '🎉 Payment Successful!',
         message: `${ticketCount} ticket(s) confirmed for "${selectedEvent.title}". Total Paid: Rs. ${(bookingSuccess.totalAmount || (selectedEvent.price * ticketCount)).toLocaleString()}`,
@@ -99,7 +127,6 @@ export default function Events({ user, onAddNotification }) {
       setToastAlert(notificationMsg);
       setTimeout(() => setToastAlert(null), 8000);
 
-      // Refresh remaining seat count
       loadEvents();
     } catch (err) {
       alert('Payment failed: ' + err.message);
@@ -123,10 +150,19 @@ export default function Events({ user, onAddNotification }) {
         </div>
       )}
 
-      {/* Page Header */}
-      <div style={{ marginBottom: '32px' }}>
-        <h1 style={{ fontSize: '2.2rem', fontWeight: 800, marginBottom: '8px' }}>Explore Upcoming Events</h1>
-        <p style={{ color: 'var(--text-muted)' }}>Browse music festivals, tech summits, workshops, and reserve your tickets instantly.</p>
+      {/* Page Header & Admin Create Trigger */}
+      <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start', marginBottom: '32px', flexWrap: 'wrap', gap: '16px' }}>
+        <div>
+          <h1 style={{ fontSize: '2.2rem', fontWeight: 800, marginBottom: '8px' }}>Explore Upcoming Events</h1>
+          <p style={{ color: 'var(--text-muted)' }}>Browse music festivals, tech summits, workshops, and reserve your tickets instantly.</p>
+        </div>
+
+        {/* ADMIN Create Event Button */}
+        {user && user.role === 'ADMIN' && (
+          <button onClick={() => setShowCreateModal(true)} className="btn btn-primary" style={{ display: 'flex', alignItems: 'center', gap: '8px', background: 'linear-gradient(135deg, #f59e0b, #d97706)', padding: '12px 20px' }}>
+            <PlusCircle size={20} /> Add New Event (Admin)
+          </button>
+        )}
       </div>
 
       {loading ? (
@@ -154,6 +190,87 @@ export default function Events({ user, onAddNotification }) {
               </button>
             </div>
           ))}
+        </div>
+      )}
+
+      {/* ADMIN Create Event Modal */}
+      {showCreateModal && (
+        <div className="modal-overlay" onClick={() => setShowCreateModal(false)}>
+          <div className="modal-content glass-panel" style={{ maxWidth: '520px' }} onClick={(e) => e.stopPropagation()}>
+            <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '20px' }}>
+              <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
+                <Shield size={22} color="var(--warning-color)" />
+                <h3 style={{ fontSize: '1.3rem', fontWeight: 700 }}>Admin: Create New Event</h3>
+              </div>
+              <button onClick={() => setShowCreateModal(false)} className="btn btn-secondary" style={{ padding: '6px' }}><X size={20} /></button>
+            </div>
+
+            <form onSubmit={handleCreateEventSubmit}>
+              <div className="form-group" style={{ marginBottom: '12px' }}>
+                <label style={{ fontSize: '0.85rem' }}>Event Title</label>
+                <input
+                  type="text"
+                  className="form-input"
+                  placeholder="e.g. Sri Lanka Cloud & DevOps Summit"
+                  required
+                  value={newEvent.title}
+                  onChange={(e) => setNewEvent({ ...newEvent, title: e.target.value })}
+                />
+              </div>
+
+              <div className="form-group" style={{ marginBottom: '12px' }}>
+                <label style={{ fontSize: '0.85rem' }}>Description</label>
+                <textarea
+                  className="form-input"
+                  style={{ height: '70px' }}
+                  placeholder="Detailed agenda or event overview"
+                  value={newEvent.description}
+                  onChange={(e) => setNewEvent({ ...newEvent, description: e.target.value })}
+                />
+              </div>
+
+              <div className="form-group" style={{ marginBottom: '12px' }}>
+                <label style={{ fontSize: '0.85rem' }}>Location / Venue</label>
+                <input
+                  type="text"
+                  className="form-input"
+                  placeholder="e.g. BMICH, Colombo"
+                  required
+                  value={newEvent.location}
+                  onChange={(e) => setNewEvent({ ...newEvent, location: e.target.value })}
+                />
+              </div>
+
+              <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '12px', marginBottom: '18px' }}>
+                <div className="form-group">
+                  <label style={{ fontSize: '0.85rem' }}>Capacity (Seats)</label>
+                  <input
+                    type="number"
+                    className="form-input"
+                    min="1"
+                    required
+                    value={newEvent.capacity}
+                    onChange={(e) => setNewEvent({ ...newEvent, capacity: e.target.value })}
+                  />
+                </div>
+                <div className="form-group">
+                  <label style={{ fontSize: '0.85rem' }}>Price (LKR)</label>
+                  <input
+                    type="number"
+                    className="form-input"
+                    min="0"
+                    required
+                    value={newEvent.price}
+                    onChange={(e) => setNewEvent({ ...newEvent, price: e.target.value })}
+                  />
+                </div>
+              </div>
+
+              <button type="submit" className="btn btn-primary" style={{ width: '100%', padding: '12px', background: 'linear-gradient(135deg, #f59e0b, #d97706)' }}>
+                Publish Event to MongoDB
+              </button>
+            </form>
+          </div>
         </div>
       )}
 

@@ -56,12 +56,24 @@ export const api = {
       console.warn('Backend Event Service offline, using mock catalog for UI demonstration.');
     }
 
-    // Demo Events Mock (when Member 2 service is starting)
     return [
-      { id: 1, title: 'Tech Conference 2026', location: 'Colombo', date: '2026-09-20', capacity: 100, availableSeats: 65, price: 2500 },
-      { id: 2, title: 'AI & Cloud Summit', location: 'Kandy', date: '2026-10-15', capacity: 150, availableSeats: 120, price: 3500 },
-      { id: 3, title: 'Cybersecurity Workshop', location: 'Galle', date: '2026-11-05', capacity: 80, availableSeats: 25, price: 1800 }
+      { id: 100001, title: 'Global Tech Summit 2026', location: 'Colombo Exhibition Centre', eventDate: '2026-09-30T09:00:00', capacity: 200, availableSeats: 185, price: 4500 },
+      { id: 100002, title: 'Sri Lanka Music & Arts Fest', location: 'Galle Face Green, Colombo', eventDate: '2026-10-15T18:00:00', capacity: 500, availableSeats: 420, price: 2500 },
+      { id: 100003, title: 'AI & Cloud Microservices Expo', location: 'BMICH, Colombo', eventDate: '2026-11-01T10:00:00', capacity: 150, availableSeats: 110, price: 6000 }
     ];
+  },
+
+  createEvent: async (eventData) => {
+    const response = await fetch(`${GATEWAY_URL}/events`, {
+      method: 'POST',
+      headers: getAuthHeaders(),
+      body: JSON.stringify(eventData)
+    });
+    if (!response.ok) {
+      const error = await response.json();
+      throw new Error(error.message || 'Failed to create event');
+    }
+    return response.json();
   },
 
   // Member 3: Booking Service
@@ -98,11 +110,23 @@ export const api = {
       console.warn('Backend Booking Service offline, using mock bookings.');
     }
     return [
-      { id: 101, eventTitle: 'Tech Conference 2026', tickets: 2, totalAmount: 5000, status: 'CONFIRMED', date: '2026-09-20' }
+      { id: 101, eventTitle: 'Global Tech Summit 2026', tickets: 2, totalAmount: 9000, status: 'CONFIRMED', date: '2026-09-30' }
     ];
   },
 
-  // Member 4: Payment & Notification Service
+  getAllBookings: async () => {
+    try {
+      const response = await fetch(`${GATEWAY_URL}/bookings`, {
+        headers: getAuthHeaders()
+      });
+      if (response.ok) return await response.json();
+    } catch (e) {
+      console.warn('Backend Booking Service offline.');
+    }
+    return [];
+  },
+
+  // Member 4 & 5: Payment & Notification Service
   processPayment: async (paymentData) => {
     try {
       const response = await fetch(`${GATEWAY_URL}/payments/process`, {
@@ -122,6 +146,18 @@ export const api = {
       status: 'SUCCESS',
       timestamp: new Date().toISOString()
     };
+  },
+
+  getAllPayments: async () => {
+    try {
+      const response = await fetch(`${GATEWAY_URL}/payments`, {
+        headers: getAuthHeaders()
+      });
+      if (response.ok) return await response.json();
+    } catch (e) {
+      console.warn('Backend Payment Service offline.');
+    }
+    return [];
   },
 
   getNotifications: async () => {
