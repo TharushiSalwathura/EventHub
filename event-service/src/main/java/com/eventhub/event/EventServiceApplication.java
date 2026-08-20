@@ -22,6 +22,7 @@ public class EventServiceApplication {
         return args -> {
             if (eventRepository.count() == 0) {
                 eventRepository.save(Event.builder()
+                        .id(100001L)
                         .title("Global Tech Summit 2026")
                         .description("Premier annual technology and software engineering conference with international keynote speakers.")
                         .location("Colombo Exhibition & Convention Centre")
@@ -32,6 +33,7 @@ public class EventServiceApplication {
                         .build());
 
                 eventRepository.save(Event.builder()
+                        .id(100002L)
                         .title("Sri Lanka Music & Arts Fest")
                         .description("Live outdoor music performance featuring top national bands, cultural dancers, and food stalls.")
                         .location("Galle Face Green, Colombo")
@@ -42,6 +44,7 @@ public class EventServiceApplication {
                         .build());
 
                 eventRepository.save(Event.builder()
+                        .id(100003L)
                         .title("AI & Cloud Microservices Expo")
                         .description("Hands-on workshop exploring Spring Boot 3, Spring Cloud Gateway, Docker, and GenAI integrations.")
                         .location("BMICH, Colombo")

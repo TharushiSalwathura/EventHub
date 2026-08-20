@@ -25,12 +25,6 @@ import java.util.Map;
 
 /**
  * REST controller exposing all Event Management endpoints.
- *
- * <p>Base path: {@code /events}
- *
- * <p>All write endpoints are secured by the {@code X-API-KEY} header (validated in
- * {@link com.eventhub.event.security.ApiKeyFilter}). Public read endpoints (GET /events,
- * GET /events/{id}) are open to anonymous callers routed through the API Gateway.
  */
 @Slf4j
 @RestController
@@ -40,10 +34,6 @@ import java.util.Map;
 public class EventController {
 
     private final EventService eventService;
-
-    // ═══════════════════════════════════════════════════════════════════════════
-    // POST /events — Create a new event
-    // ═══════════════════════════════════════════════════════════════════════════
 
     @Operation(
         summary = "Create a new event",
@@ -67,10 +57,6 @@ public class EventController {
         return ResponseEntity.status(HttpStatus.CREATED).body(response);
     }
 
-    // ═══════════════════════════════════════════════════════════════════════════
-    // GET /events — List all events
-    // ═══════════════════════════════════════════════════════════════════════════
-
     @Operation(
         summary = "List all events",
         description = "Returns all events stored in the system. Public endpoint — no API key required."
@@ -83,36 +69,22 @@ public class EventController {
         return ResponseEntity.ok(eventService.getAllEvents());
     }
 
-    // ═══════════════════════════════════════════════════════════════════════════
-    // GET /events/search — Search events by query
-    // ═══════════════════════════════════════════════════════════════════════════
-
     @Operation(
         summary = "Search events by title or location",
         description = "Case-insensitive search across event titles and locations. Example: `?query=Colombo`"
     )
     @ApiResponses({
         @ApiResponse(responseCode = "200", description = "Search results returned",
-            content = @Content(schema = @Schema(implementation = EventResponse.class))),
-        @ApiResponse(responseCode = "400", description = "Missing query parameter",
-            content = @Content(schema = @Schema(implementation = ErrorResponse.class)))
+            content = @Content(schema = @Schema(implementation = EventResponse.class)))
     })
     @GetMapping("/search")
     public ResponseEntity<List<EventResponse>> searchEvents(
-            @Parameter(description = "Search term to match against event title or location", required = true, example = "Colombo")
-            @RequestParam String query) {
-
-        if (query == null || query.isBlank()) {
-            return ResponseEntity.badRequest().build();
-        }
+            @Parameter(description = "Search term to match against event title or location", required = false, example = "Colombo")
+            @RequestParam(name = "query", required = false, defaultValue = "") String query) {
 
         log.info("GET /events/search - query='{}'", query);
         return ResponseEntity.ok(eventService.searchEvents(query));
     }
-
-    // ═══════════════════════════════════════════════════════════════════════════
-    // GET /events/{id} — Get event by ID
-    // ═══════════════════════════════════════════════════════════════════════════
 
     @Operation(
         summary = "Get event details by ID",
@@ -133,10 +105,6 @@ public class EventController {
         return ResponseEntity.ok(eventService.getEventById(id));
     }
 
-    // ═══════════════════════════════════════════════════════════════════════════
-    // GET /events/{id}/availability — Check seat availability
-    // ═══════════════════════════════════════════════════════════════════════════
-
     @Operation(
         summary = "Check available seats for an event",
         description = "Returns capacity, available seats, and booked seats for the specified event.",
@@ -155,10 +123,6 @@ public class EventController {
         log.info("GET /events/{}/availability", id);
         return ResponseEntity.ok(eventService.checkAvailability(id));
     }
-
-    // ═══════════════════════════════════════════════════════════════════════════
-    // PUT /events/{id} — Update event
-    // ═══════════════════════════════════════════════════════════════════════════
 
     @Operation(
         summary = "Update event details",
@@ -185,10 +149,6 @@ public class EventController {
         return ResponseEntity.ok(eventService.updateEvent(id, request));
     }
 
-    // ═══════════════════════════════════════════════════════════════════════════
-    // DELETE /events/{id} — Delete event
-    // ═══════════════════════════════════════════════════════════════════════════
-
     @Operation(
         summary = "Delete an event",
         description = "Permanently removes an event from the system. Requires a valid X-API-KEY header.",
@@ -210,10 +170,6 @@ public class EventController {
         eventService.deleteEvent(id);
         return ResponseEntity.noContent().build();
     }
-
-    // ═══════════════════════════════════════════════════════════════════════════
-    // POST /events/{id}/reduce-seats — Internal: reduce seats (for booking-service)
-    // ═══════════════════════════════════════════════════════════════════════════
 
     @Operation(
         summary = "Reduce available seats (internal)",
@@ -237,10 +193,6 @@ public class EventController {
         log.info("POST /events/{}/reduce-seats?count={}", id, count);
         return ResponseEntity.ok(eventService.reduceSeats(id, count));
     }
-
-    // ═══════════════════════════════════════════════════════════════════════════
-    // POST /events/{id}/release-seats — Internal: release seats (on cancellation)
-    // ═══════════════════════════════════════════════════════════════════════════
 
     @Operation(
         summary = "Release seats back to pool (internal)",
