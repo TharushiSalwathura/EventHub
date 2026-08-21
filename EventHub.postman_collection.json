@@ -107,7 +107,7 @@
 						],
 						"body": {
 							"mode": "raw",
-							"raw": "{\n  \"email\": \"postmantest@gmail.com\",\n  \"password\": \"12345678\"\n}"
+							"raw": "{\n  \"email\": \"eventadmin@eventhub.com\",\n  \"password\": \"password123\"\n}"
 						},
 						"url": {
 							"raw": "http://localhost:8080/auth/login",
@@ -225,6 +225,31 @@
 							"port": "8080",
 							"path": [
 								"events"
+							]
+						}
+					},
+					"response": []
+				},
+				{
+					"name": "Delete Event (Admin Only)",
+					"request": {
+						"method": "DELETE",
+						"header": [
+							{
+								"key": "Authorization",
+								"value": "Bearer {{jwt_token}}"
+							}
+						],
+						"url": {
+							"raw": "http://localhost:8080/events/100001",
+							"protocol": "http",
+							"host": [
+								"localhost"
+							],
+							"port": "8080",
+							"path": [
+								"events",
+								"100001"
 							]
 						}
 					},
