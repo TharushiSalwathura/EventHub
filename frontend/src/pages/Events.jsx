@@ -1,6 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import { api } from '../services/api';
-import { Calendar, MapPin, Ticket, CheckCircle2, DollarSign, X, CreditCard, Lock, ShieldCheck, Sparkles, PlusCircle, Shield } from 'lucide-react';
+import { Calendar, MapPin, Ticket, CheckCircle2, DollarSign, X, CreditCard, Lock, ShieldCheck, Sparkles, PlusCircle, Shield, Trash2 } from 'lucide-react';
 
 export default function Events({ user, onAddNotification }) {
   const [events, setEvents] = useState([]);
@@ -61,6 +61,18 @@ export default function Events({ user, onAddNotification }) {
       loadEvents();
     } catch (err) {
       alert('Failed to create event: ' + err.message);
+    }
+  };
+
+  const handleDeleteEvent = async (eventId, title) => {
+    if (window.confirm(`Are you sure you want to delete event "${title}" from MongoDB?`)) {
+      try {
+        await api.deleteEvent(eventId);
+        alert(`Event "${title}" has been deleted successfully!`);
+        loadEvents();
+      } catch (err) {
+        alert('Failed to delete event: ' + err.message);
+      }
     }
   };
 
@@ -185,9 +197,31 @@ export default function Events({ user, onAddNotification }) {
                 </div>
               </div>
 
-              <button onClick={() => handleBookClick(evt)} className="btn btn-primary" style={{ width: '100%' }}>
-                <Ticket size={18} /> Book Tickets
-              </button>
+              <div style={{ display: 'flex', gap: '10px' }}>
+                <button onClick={() => handleBookClick(evt)} className="btn btn-primary" style={{ flex: 1 }}>
+                  <Ticket size={18} /> Book Tickets
+                </button>
+
+                {/* ADMIN Delete Event Button */}
+                {user && user.role === 'ADMIN' && (
+                  <button
+                    onClick={() => handleDeleteEvent(evt.id, evt.title)}
+                    className="btn"
+                    title="Delete Event (Admin Only)"
+                    style={{
+                      background: 'rgba(239, 68, 68, 0.2)',
+                      border: '1px solid rgba(239, 68, 68, 0.4)',
+                      color: '#ef4444',
+                      padding: '10px 14px',
+                      display: 'flex',
+                      alignItems: 'center',
+                      justifyContent: 'center'
+                    }}
+                  >
+                    <Trash2 size={18} />
+                  </button>
+                )}
+              </div>
             </div>
           ))}
         </div>

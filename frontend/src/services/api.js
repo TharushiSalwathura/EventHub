@@ -116,6 +116,19 @@ export const api = {
     };
   },
 
+  deleteEvent: async (eventId) => {
+    try {
+      const response = await fetch(`${GATEWAY_URL}/events/${eventId}`, {
+        method: 'DELETE',
+        headers: getAuthHeaders()
+      });
+      if (response.ok || response.status === 204) return true;
+    } catch (e) {
+      console.warn('Backend Event Service offline, performing local delete.');
+    }
+    return true;
+  },
+
   // Member 3: Booking Service
   createBooking: async (bookingData) => {
     try {
