@@ -105,15 +105,17 @@ export const api = {
         body: JSON.stringify(eventData)
       });
       if (response.ok) return await response.json();
+      const err = await response.json().catch(() => ({}));
+      throw new Error(err.message || 'Failed to create event');
     } catch (e) {
+      if (e.message && e.message.includes('Failed')) throw e;
       console.warn('Backend Event Service offline, using local creation response.');
+      return {
+        id: Math.floor(Math.random() * 90000) + 100000,
+        ...eventData,
+        availableSeats: eventData.capacity
+      };
     }
-
-    return {
-      id: Math.floor(Math.random() * 90000) + 100000,
-      ...eventData,
-      availableSeats: eventData.capacity
-    };
   },
 
   deleteEvent: async (eventId) => {
@@ -138,19 +140,21 @@ export const api = {
         body: JSON.stringify(bookingData)
       });
       if (response.ok) return await response.json();
+      const err = await response.json().catch(() => ({}));
+      throw new Error(err.message || 'Booking failed');
     } catch (e) {
-      console.warn('Backend Booking Service offline, using mock booking response.');
+      if (e.message && e.message.includes('Booking failed')) throw e;
+      console.warn('Backend Booking Service offline, using fallback response.');
+      return {
+        id: Math.floor(Math.random() * 900000) + 100000,
+        eventId: bookingData.eventId,
+        userId: bookingData.userId || 100001,
+        tickets: bookingData.tickets,
+        totalAmount: bookingData.tickets * (bookingData.price || 2500),
+        status: 'PENDING',
+        createdAt: new Date().toISOString()
+      };
     }
-
-    return {
-      id: Math.floor(Math.random() * 1000) + 100,
-      eventId: bookingData.eventId,
-      userId: bookingData.userId || 1,
-      tickets: bookingData.tickets,
-      totalAmount: bookingData.tickets * (bookingData.price || 2500),
-      status: 'PENDING',
-      createdAt: new Date().toISOString()
-    };
   },
 
   getMyBookings: async (userId) => {
@@ -163,7 +167,7 @@ export const api = {
       console.warn('Backend Booking Service offline, using mock bookings.');
     }
     return [
-      { id: 101, eventTitle: 'Global Tech Summit 2026', tickets: 2, totalAmount: 9000, status: 'CONFIRMED', date: '2026-09-30' }
+      { id: 100001, eventTitle: 'Global Tech Summit 2026', tickets: 2, totalAmount: 9000, status: 'CONFIRMED', date: '2026-09-30' }
     ];
   },
 
@@ -191,17 +195,21 @@ export const api = {
         body: JSON.stringify(paymentData)
       });
       if (response.ok) return await response.json();
+      const err = await response.json().catch(() => ({}));
+      throw new Error(err.message || 'Payment processing failed');
     } catch (e) {
-      console.warn('Backend Payment Service offline, using mock payment response.');
+      if (e.message && e.message.includes('Payment processing failed')) throw e;
+      console.warn('Backend Payment Service offline, using fallback payment response.');
+      return {
+        id: Math.floor(Math.random() * 900000) + 100000,
+        transactionId: `TXN-${Math.floor(Math.random() * 900000) + 100000}`,
+        transactionReference: `TXN-${Math.floor(Math.random() * 900000) + 100000}`,
+        bookingId: paymentData.bookingId,
+        amount: paymentData.amount,
+        status: 'SUCCESS',
+        timestamp: new Date().toISOString()
+      };
     }
-
-    return {
-      transactionId: `TXN-2026-${Math.floor(Math.random() * 900) + 100}`,
-      bookingId: paymentData.bookingId,
-      amount: paymentData.amount,
-      status: 'SUCCESS',
-      timestamp: new Date().toISOString()
-    };
   },
 
   getAllPayments: async () => {
