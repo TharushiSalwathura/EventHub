@@ -8,7 +8,7 @@
 
 ## 1. Project Overview
 
-**EventHub** is a university group project designed using a **microservices architecture** where each student owns one distinct microservice / functional domain.
+**EventHub** is a university group project designed using a **microservices architecture** where each student owns one distinct microservice / functional domain..
 
 ### Team Responsibilities & Task Distribution
 
